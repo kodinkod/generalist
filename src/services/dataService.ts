@@ -1,6 +1,17 @@
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured, disableSupabase } from './supabase';
 import type { Item, Movie, Rating, Feedback, UserPreferences } from '../types';
 import { sampleMovies } from '../data/sampleMovies';
+
+// Helper function to check if error is a network/CORS error
+const isNetworkError = (error: any): boolean => {
+  if (!error) return false;
+  const message = error.message || error.toString();
+  return message.includes('CORS') ||
+         message.includes('Load failed') ||
+         message.includes('NetworkError') ||
+         message.includes('Failed to fetch') ||
+         error.code === 'PGRST301'; // Supabase JWT error
+};
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -34,20 +45,38 @@ export const itemsApi = {
   // Get all items
   async getAll(): Promise<Item[]> {
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('items')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
+        if (error) {
+          if (isNetworkError(error)) {
+            console.warn('Supabase connection error, falling back to localStorage:', error);
+            disableSupabase();
+            // Retry with localStorage
+            return this.getAll();
+          }
+          throw error;
+        }
 
-      return data.map((item: any) => ({
-        ...item,
-        ...item.metadata,
-        type: item.type as 'movie',
-        createdAt: new Date(item.created_at),
-        updatedAt: new Date(item.updated_at),
-      }));
+        return data.map((item: any) => ({
+          ...item,
+          ...item.metadata,
+          type: item.type as 'movie',
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.updated_at),
+        }));
+      } catch (error) {
+        if (isNetworkError(error)) {
+          console.warn('Supabase network error, falling back to localStorage:', error);
+          disableSupabase();
+          // Retry with localStorage
+          return this.getAll();
+        }
+        throw error;
+      }
     } else {
       initializeSampleData();
       const items = localStorage.getItem(STORAGE_KEYS.ITEMS);
@@ -131,21 +160,37 @@ export const ratingsApi = {
   // Get all ratings
   async getAll(): Promise<Rating[]> {
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase
-        .from('ratings')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('ratings')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
+        if (error) {
+          if (isNetworkError(error)) {
+            console.warn('Supabase connection error, falling back to localStorage');
+            disableSupabase();
+            return this.getAll();
+          }
+          throw error;
+        }
 
-      return data.map((rating: any) => ({
-        id: rating.id,
-        userId: rating.user_id,
-        itemId: rating.item_id,
-        rating: rating.rating,
-        comment: rating.comment,
-        createdAt: new Date(rating.created_at),
-      }));
+        return data.map((rating: any) => ({
+          id: rating.id,
+          userId: rating.user_id,
+          itemId: rating.item_id,
+          rating: rating.rating,
+          comment: rating.comment,
+          createdAt: new Date(rating.created_at),
+        }));
+      } catch (error) {
+        if (isNetworkError(error)) {
+          console.warn('Supabase network error, falling back to localStorage');
+          disableSupabase();
+          return this.getAll();
+        }
+        throw error;
+      }
     } else {
       const ratings = localStorage.getItem(STORAGE_KEYS.RATINGS);
       return ratings ? JSON.parse(ratings) : [];
@@ -312,20 +357,36 @@ export const preferencesApi = {
     const userId = getUserId();
 
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (error) throw error;
+        if (error) {
+          if (isNetworkError(error)) {
+            console.warn('Supabase connection error, falling back to localStorage');
+            disableSupabase();
+            return this.get();
+          }
+          throw error;
+        }
 
-      return data ? {
-        userId: data.user_id,
-        favoriteGenres: data.favorite_genres || [],
-        favoriteMoods: data.favorite_moods || [],
-        ratings: await ratingsApi.getAll(),
-      } : null;
+        return data ? {
+          userId: data.user_id,
+          favoriteGenres: data.favorite_genres || [],
+          favoriteMoods: data.favorite_moods || [],
+          ratings: await ratingsApi.getAll(),
+        } : null;
+      } catch (error) {
+        if (isNetworkError(error)) {
+          console.warn('Supabase network error, falling back to localStorage');
+          disableSupabase();
+          return this.get();
+        }
+        throw error;
+      }
     } else {
       const prefs = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
       const preferences = prefs ? JSON.parse(prefs) : null;

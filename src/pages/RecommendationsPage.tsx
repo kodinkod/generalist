@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Container,
@@ -103,11 +103,12 @@ const RecommendationsPage = () => {
 
   useEffect(() => {
     loadRecommendations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [systemId]);
 
-  const handleFilterChange = (filter: RecommendationFilter) => {
+  const handleFilterChange = useCallback((filter: RecommendationFilter) => {
     loadRecommendations(filter);
-  };
+  }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

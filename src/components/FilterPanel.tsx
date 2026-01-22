@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Paper,
   Typography,
@@ -25,22 +25,32 @@ interface FilterPanelProps {
 }
 
 const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) => {
+  // Calculate min/max year from movies
+  const { minYear, maxYear } = useMemo(() => {
+    if (movies.length === 0) {
+      return { minYear: 1990, maxYear: 2024 };
+    }
+    return {
+      minYear: Math.min(...movies.map(m => m.year || 2024)),
+      maxYear: Math.max(...movies.map(m => m.year || 2024)),
+    };
+  }, [movies]);
+
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [minRating, setMinRating] = useState<number>(0);
-  const [yearRange, setYearRange] = useState<number[]>([1990, 2024]);
+  const [yearRange, setYearRange] = useState<number[]>([minYear, maxYear]);
 
   const allGenres = recommendationEngine.getAllGenres(movies);
   const allMoods = recommendationEngine.getAllMoods(movies);
 
-  const minYear = Math.min(...movies.map(m => m.year || 2024));
-  const maxYear = Math.max(...movies.map(m => m.year || 2024));
-
+  // Initialize year range when movies change
   useEffect(() => {
-    applyFilters();
-  }, [selectedGenres, selectedMoods, minRating, yearRange]);
+    setYearRange([minYear, maxYear]);
+  }, [minYear, maxYear]);
 
-  const applyFilters = () => {
+  // Memoize filter object to avoid unnecessary re-renders
+  const currentFilter = useMemo(() => {
     const filter: RecommendationFilter = {};
 
     if (selectedGenres.length > 0) {
@@ -62,8 +72,13 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
       };
     }
 
-    onFilterChange(filter);
-  };
+    return filter;
+  }, [selectedGenres, selectedMoods, minRating, yearRange, minYear, maxYear]);
+
+  // Only trigger filter change when filter actually changes
+  useEffect(() => {
+    onFilterChange(currentFilter);
+  }, [currentFilter, onFilterChange]);
 
   const handleGenreChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
