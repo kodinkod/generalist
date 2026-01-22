@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Paper,
   Typography,
@@ -25,6 +25,8 @@ interface FilterPanelProps {
 }
 
 const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) => {
+  const isFirstRender = useRef(true);
+
   // Calculate min/max year from movies
   const { minYear, maxYear } = useMemo(() => {
     if (movies.length === 0) {
@@ -75,10 +77,15 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
     return filter;
   }, [selectedGenres, selectedMoods, minRating, yearRange, minYear, maxYear]);
 
-  // Only trigger filter change when filter actually changes
+  // Only trigger filter change when filter actually changes (skip first render)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     onFilterChange(currentFilter);
-  }, [currentFilter, onFilterChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFilter]);
 
   const handleGenreChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;

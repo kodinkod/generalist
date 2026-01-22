@@ -34,7 +34,7 @@ const RecommendationsPage = () => {
     'for-you': { name: 'For You', description: 'Personalized recommendations' },
   }[systemId || 'trending'] || { name: 'Recommendations', description: '' };
 
-  const loadRecommendations = async (filter?: RecommendationFilter) => {
+  const loadRecommendations = useCallback(async (filter?: RecommendationFilter) => {
     try {
       setLoading(true);
       setError(null);
@@ -99,16 +99,15 @@ const RecommendationsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [systemId]);
 
   useEffect(() => {
     loadRecommendations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [systemId]);
+  }, [loadRecommendations]);
 
   const handleFilterChange = useCallback((filter: RecommendationFilter) => {
     loadRecommendations(filter);
-  }, []);
+  }, [loadRecommendations]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
