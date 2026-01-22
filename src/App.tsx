@@ -5,6 +5,7 @@ import FeedbackButton from './components/FeedbackButton';
 import HomePage from './pages/HomePage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import AddMoviePage from './pages/AddMoviePage';
+import RateMoviesPage from './pages/RateMoviesPage';
 
 // Create a minimalist theme
 const theme = createTheme({
@@ -107,6 +108,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/recommendations/:systemId" element={<RecommendationsPage />} />
           <Route path="/add-movie" element={<AddMoviePage />} />
+          <Route path="/rate-movies" element={<RateMoviesPage />} />
         </Routes>
         <FeedbackButton />
       </Router>
