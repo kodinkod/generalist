@@ -29,6 +29,7 @@ const MovieCard = ({ movie, recommendation, onRatingChange }: MovieCardProps) =>
   const [expanded, setExpanded] = useState(false);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [isRating, setIsRating] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     loadUserRating();
@@ -76,9 +77,10 @@ const MovieCard = ({ movie, recommendation, onRatingChange }: MovieCardProps) =>
       <CardMedia
         component="img"
         height="300"
-        image={movie.imageUrl || 'https://images.unsplash.com/photo-1574267432644-f2f47c5ceb88?w=400'}
+        image={imageError ? `https://via.placeholder.com/400x600/1976d2/ffffff?text=${encodeURIComponent(movie.title.slice(0, 20))}` : (movie.imageUrl || 'https://via.placeholder.com/400x600/1976d2/ffffff?text=Movie')}
         alt={movie.title}
-        sx={{ objectFit: 'cover' }}
+        sx={{ objectFit: 'cover', bgcolor: 'grey.200' }}
+        onError={() => setImageError(true)}
       />
 
       <CardContent sx={{ flexGrow: 1, pb: 1 }}>

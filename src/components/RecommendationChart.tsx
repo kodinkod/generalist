@@ -31,6 +31,20 @@ const COLORS = [
 ];
 
 const RecommendationChart = ({ recommendations }: RecommendationChartProps) => {
+  // Check if we have recommendations
+  if (!recommendations || recommendations.length === 0) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No data available for analytics
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Get some recommendations first to see analytics and charts
+        </Typography>
+      </Box>
+    );
+  }
+
   // Genre distribution in recommendations
   const genreData = useMemo(() => {
     const genreCounts = new Map<string, number>();
@@ -116,68 +130,74 @@ const RecommendationChart = ({ recommendations }: RecommendationChartProps) => {
     <Box>
       <Grid container spacing={3}>
         {/* Genre Distribution */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Genre Distribution
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={genreData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {genreData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
+        {genreData.length > 0 && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                Genre Distribution
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={genreData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {genreData.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        )}
 
         {/* Mood Distribution */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Mood Distribution
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={moodData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#4ECDC4" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
+        {moodData.length > 0 && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                Mood Distribution
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={moodData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#4ECDC4" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        )}
 
         {/* Top Recommendations by Score */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Top Recommendations
-            </Typography>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={topRecommendations} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={150} />
-                <Tooltip />
-                <Bar dataKey="score" fill="#9D4EDD" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
+        {topRecommendations.length > 0 && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                Top Recommendations
+              </Typography>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={topRecommendations} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={150} />
+                  <Tooltip />
+                  <Bar dataKey="score" fill="#9D4EDD" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        )}
 
         {/* Rating Distribution */}
         <Grid size={{ xs: 12, md: 6 }}>
