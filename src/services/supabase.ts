@@ -13,9 +13,27 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Check if Supabase is configured
+// Track if Supabase is working or if we should fallback to localStorage
+let supabaseAvailable = Boolean(supabaseUrl && supabaseAnonKey);
+const SUPABASE_DISABLED_KEY = 'supabase_disabled';
+
+// Check if Supabase was previously disabled due to errors
+if (typeof window !== 'undefined' && localStorage.getItem(SUPABASE_DISABLED_KEY) === 'true') {
+  supabaseAvailable = false;
+}
+
+// Check if Supabase is configured and available
 export const isSupabaseConfigured = () => {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  return supabaseAvailable;
+};
+
+// Disable Supabase and fallback to localStorage
+export const disableSupabase = () => {
+  console.warn('Supabase disabled due to connection errors. Falling back to localStorage.');
+  supabaseAvailable = false;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SUPABASE_DISABLED_KEY, 'true');
+  }
 };
 
 // Create a minimal dummy client for when Supabase is not configured
