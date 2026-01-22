@@ -394,30 +394,50 @@ export class HybridRecommendationEngine {
       .slice(0, count);
   }
 
-  // Get trending items (most rated recently)
+  // Get trending items (weighted by recent ratings and total ratings)
   getTrending(allItems: Movie[], allRatings: Rating[], count: number = 10): Recommendation[] {
-    const recentRatings = allRatings.filter(r => {
-      const daysSinceRating = (Date.now() - new Date(r.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceRating <= 30; // Last 30 days
+    // Calculate weighted score for each item based on recency and quantity
+    const itemScores = new Map<string, { recentCount: number, totalCount: number, avgRating: number }>();
+
+    allRatings.forEach(rating => {
+      const daysSinceRating = (Date.now() - new Date(rating.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+      const isRecent = daysSinceRating <= 30;
+
+      if (!itemScores.has(rating.itemId)) {
+        itemScores.set(rating.itemId, { recentCount: 0, totalCount: 0, avgRating: 0 });
+      }
+
+      const scores = itemScores.get(rating.itemId)!;
+      scores.totalCount += 1;
+      if (isRecent) {
+        scores.recentCount += 1;
+      }
     });
 
-    const itemRatingCounts = new Map<string, number>();
-    recentRatings.forEach(rating => {
-      itemRatingCounts.set(rating.itemId, (itemRatingCounts.get(rating.itemId) || 0) + 1);
-    });
+    // Calculate weighted scores: recent ratings count more, but total ratings matter too
+    const scoredItems = Array.from(itemScores.entries()).map(([itemId, scores]) => {
+      const item = allItems.find(i => i.id === itemId);
+      if (!item) return null;
 
-    return Array.from(itemRatingCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, count)
-      .map(([itemId, count]) => {
-        const item = allItems.find(i => i.id === itemId);
-        return item ? {
-          item,
-          score: count,
-          reasons: [`Trending now`, `${count} recent ratings`],
-        } : null;
-      })
-      .filter(Boolean) as Recommendation[];
+      // Weight: 70% recent ratings, 30% total ratings
+      const weightedScore = (scores.recentCount * 0.7) + (scores.totalCount * 0.3);
+
+      const recentText = scores.recentCount > 0 ? `${scores.recentCount} recent ratings` : '';
+      const totalText = `${scores.totalCount} total ratings`;
+      const reasons = scores.recentCount > 0
+        ? ['Trending now', recentText, totalText]
+        : ['Popular', totalText];
+
+      return {
+        item,
+        score: weightedScore,
+        reasons,
+      };
+    }).filter(Boolean) as Recommendation[];
+
+    return scoredItems
+      .sort((a, b) => b.score - a.score)
+      .slice(0, count);
   }
 
   // Get all unique genres from items
