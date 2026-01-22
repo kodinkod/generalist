@@ -13,6 +13,21 @@ const isNetworkError = (error: any): boolean => {
          error.code === 'PGRST301'; // Supabase JWT error
 };
 
+// Helper function to log detailed error information
+const logDatabaseError = (operation: string, error: any) => {
+  console.group(`❌ Database Error - ${operation}`);
+  console.error('Message:', error.message || error.toString());
+  if (error.code) console.error('Code:', error.code);
+  if (error.hint) console.error('Hint:', error.hint);
+  if (error.details) console.error('Details:', error.details);
+
+  if (isNetworkError(error)) {
+    console.warn('🔄 Network/CORS error detected - switching to localStorage fallback');
+    console.log('💡 Run testDatabaseConnection() in console for diagnostics');
+  }
+  console.groupEnd();
+};
+
 // LocalStorage keys
 const STORAGE_KEYS = {
   ITEMS: 'rec_system_items',
@@ -53,7 +68,7 @@ export const itemsApi = {
 
         if (error) {
           if (isNetworkError(error)) {
-            console.warn('Supabase connection error, falling back to localStorage:', error);
+            logDatabaseError('items.getAll()', error);
             disableSupabase();
             // Retry with localStorage
             return this.getAll();
@@ -70,7 +85,7 @@ export const itemsApi = {
         }));
       } catch (error) {
         if (isNetworkError(error)) {
-          console.warn('Supabase network error, falling back to localStorage:', error);
+          logDatabaseError('items.getAll() [catch]', error);
           disableSupabase();
           // Retry with localStorage
           return this.getAll();
@@ -168,7 +183,7 @@ export const ratingsApi = {
 
         if (error) {
           if (isNetworkError(error)) {
-            console.warn('Supabase connection error, falling back to localStorage');
+            logDatabaseError('ratings.getAll()', error);
             disableSupabase();
             return this.getAll();
           }
@@ -185,7 +200,7 @@ export const ratingsApi = {
         }));
       } catch (error) {
         if (isNetworkError(error)) {
-          console.warn('Supabase network error, falling back to localStorage');
+          logDatabaseError('ratings.getAll() [catch]', error);
           disableSupabase();
           return this.getAll();
         }
@@ -366,7 +381,7 @@ export const preferencesApi = {
 
         if (error) {
           if (isNetworkError(error)) {
-            console.warn('Supabase connection error, falling back to localStorage');
+            logDatabaseError('preferences.get()', error);
             disableSupabase();
             return this.get();
           }
@@ -381,7 +396,7 @@ export const preferencesApi = {
         } : null;
       } catch (error) {
         if (isNetworkError(error)) {
-          console.warn('Supabase network error, falling back to localStorage');
+          logDatabaseError('preferences.get() [catch]', error);
           disableSupabase();
           return this.get();
         }
