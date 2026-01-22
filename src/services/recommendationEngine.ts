@@ -340,6 +340,11 @@ export class HybridRecommendationEngine {
       }
     }
 
+    // If no items after filtering, return empty
+    if (filteredItems.length === 0) {
+      return [];
+    }
+
     // Hybrid approach: combine collaborative and content-based
     let recommendations: Recommendation[] = [];
 
@@ -362,14 +367,18 @@ export class HybridRecommendationEngine {
         count
       );
       recommendations.push(...contentBased);
-    } else {
-      // If no user preferences, recommend popular items
+    }
+
+    // 3. If we still don't have enough recommendations, add popular items
+    if (recommendations.length < count) {
+      const existingIds = new Set(recommendations.map(r => r.item.id));
       const popular = filteredItems
+        .filter(item => !existingIds.has(item.id))
         .sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0))
-        .slice(0, count)
+        .slice(0, count - recommendations.length)
         .map(item => ({
           item,
-          score: item.averageRating || 0,
+          score: item.averageRating || 3.5,
           reasons: ['Popular choice', `Rating: ${item.averageRating?.toFixed(1) || 'N/A'}`],
         }));
       recommendations.push(...popular);
