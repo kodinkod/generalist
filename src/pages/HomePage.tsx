@@ -73,7 +73,7 @@ const HomePage = () => {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
+    <Container maxWidth="xl" sx={{ py: 8, minHeight: 'calc(100vh - 64px)' }}>
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography
           variant="h2"

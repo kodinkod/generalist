@@ -115,7 +115,7 @@ const AddMoviePage = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4, minHeight: 'calc(100vh - 64px)' }}>
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/')}

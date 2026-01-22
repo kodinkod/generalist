@@ -62,7 +62,7 @@ export const itemsApi = {
         .from('items')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -313,9 +313,9 @@ export const preferencesApi = {
         .from('user_preferences')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
+      if (error) throw error;
 
       return data ? {
         userId: data.user_id,
