@@ -129,7 +129,7 @@ const RecommendationsPage = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4, minHeight: 'calc(100vh - 64px)' }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
           {systemConfig.name}

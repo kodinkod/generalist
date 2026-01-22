@@ -46,6 +46,20 @@ const theme = createTheme({
     borderRadius: 12,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        html: {
+          width: '100%',
+          height: '100%',
+        },
+        body: {
+          width: '100%',
+          minHeight: '100vh',
+          margin: 0,
+          padding: 0,
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
@@ -67,6 +81,16 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
+        },
+      },
+    },
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          '@media (min-width: 600px)': {
+            paddingLeft: '24px',
+            paddingRight: '24px',
+          },
         },
       },
     },
