@@ -99,9 +99,10 @@ export const itemsApi = {
           },
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Failed to insert item');
 
       return {
         ...data,
@@ -180,9 +181,10 @@ export const ratingsApi = {
           onConflict: 'user_id,item_id'
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Failed to upsert rating');
 
       return {
         id: data.id,
@@ -245,9 +247,10 @@ export const feedbackApi = {
           message: feedback.message,
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Failed to insert feedback');
 
       return {
         id: data.id,
@@ -353,9 +356,10 @@ export const preferencesApi = {
           onConflict: 'user_id'
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Failed to upsert preferences');
 
       return {
         userId: data.user_id,
