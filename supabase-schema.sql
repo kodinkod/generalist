@@ -92,6 +92,12 @@ ALTER TABLE ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 
+-- Grant permissions to anon role (required for RLS policies to work)
+GRANT SELECT, INSERT ON items TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ratings TO anon;
+GRANT INSERT ON feedback TO anon;
+GRANT SELECT, INSERT, UPDATE ON user_preferences TO anon;
+
 -- Create policies for public read access
 CREATE POLICY "Items are viewable by everyone" ON items
   FOR SELECT USING (true);
