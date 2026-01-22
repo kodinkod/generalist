@@ -1,5 +1,5 @@
 import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material';
-import { Home, Add, Movie } from '@mui/icons-material';
+import { Home, Add, Movie, StarRate } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Navigation = () => {
@@ -39,6 +39,18 @@ const Navigation = () => {
             }}
           >
             Home
+          </Button>
+
+          <Button
+            color="inherit"
+            startIcon={<StarRate />}
+            onClick={() => navigate('/rate-movies')}
+            sx={{
+              fontWeight: location.pathname === '/rate-movies' ? 700 : 400,
+              backgroundColor: location.pathname === '/rate-movies' ? 'rgba(255,255,255,0.2)' : 'transparent',
+            }}
+          >
+            Rate Movies
           </Button>
 
           <Button
