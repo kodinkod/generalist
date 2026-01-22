@@ -18,10 +18,10 @@ import {
   MovieFilter,
 } from '@mui/icons-material';
 import { itemsApi, ratingsApi, getUserId } from '../services/dataService';
-import type { Movie, Rating as RatingType } from '../types';
+import type { Movie } from '../types';
 
 const RateMoviesPage = () => {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [, setMovies] = useState<Movie[]>([]);
   const [unratedMovies, setUnratedMovies] = useState<Movie[]>([]);
   const [currentMovie, setCurrentMovie] = useState<Movie | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
