@@ -44,7 +44,7 @@ const RecommendationsPage = () => {
       setAllMovies(movies);
 
       const ratings = await ratingsApi.getAll();
-      const userPrefs = await preferencesApi.get();
+      const userPrefs = await preferencesApi.get(ratings);
 
       let recs: Recommendation[] = [];
 

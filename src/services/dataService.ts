@@ -367,8 +367,8 @@ export const feedbackApi = {
 
 // User Preferences API
 export const preferencesApi = {
-  // Get user preferences
-  async get(): Promise<UserPreferences | null> {
+  // Get user preferences (without ratings - caller should fetch ratings separately)
+  async get(ratings?: Rating[]): Promise<UserPreferences | null> {
     const userId = getUserId();
 
     if (isSupabaseConfigured()) {
@@ -383,22 +383,25 @@ export const preferencesApi = {
           if (isNetworkError(error)) {
             logDatabaseError('preferences.get()', error);
             disableSupabase();
-            return this.get();
+            return this.get(ratings);
           }
           throw error;
         }
+
+        // Fetch ratings only if not provided and data exists
+        const userRatings = ratings || (data ? await ratingsApi.getAll() : []);
 
         return data ? {
           userId: data.user_id,
           favoriteGenres: data.favorite_genres || [],
           favoriteMoods: data.favorite_moods || [],
-          ratings: await ratingsApi.getAll(),
+          ratings: userRatings,
         } : null;
       } catch (error) {
         if (isNetworkError(error)) {
           logDatabaseError('preferences.get() [catch]', error);
           disableSupabase();
-          return this.get();
+          return this.get(ratings);
         }
         throw error;
       }
@@ -407,9 +410,12 @@ export const preferencesApi = {
       const preferences = prefs ? JSON.parse(prefs) : null;
 
       if (preferences && preferences.userId === userId) {
+        // Fetch ratings only if not provided
+        const userRatings = ratings || await ratingsApi.getAll();
+
         return {
           ...preferences,
-          ratings: await ratingsApi.getAll(),
+          ratings: userRatings,
         };
       }
 
@@ -418,7 +424,7 @@ export const preferencesApi = {
   },
 
   // Update user preferences
-  async update(preferences: Partial<UserPreferences>): Promise<UserPreferences> {
+  async update(preferences: Partial<UserPreferences>, ratings?: Rating[]): Promise<UserPreferences> {
     const userId = getUserId();
 
     if (isSupabaseConfigured()) {
@@ -437,19 +443,25 @@ export const preferencesApi = {
       if (error) throw error;
       if (!data) throw new Error('Failed to upsert preferences');
 
+      // Fetch ratings only if not provided
+      const userRatings = ratings || await ratingsApi.getAll();
+
       return {
         userId: data.user_id,
         favoriteGenres: data.favorite_genres || [],
         favoriteMoods: data.favorite_moods || [],
-        ratings: await ratingsApi.getAll(),
+        ratings: userRatings,
       };
     } else {
-      const current = await this.get();
+      const current = await this.get(ratings);
+      // Fetch ratings only if not provided
+      const userRatings = ratings || await ratingsApi.getAll();
+
       const updated: UserPreferences = {
         userId,
         favoriteGenres: preferences.favoriteGenres || current?.favoriteGenres || [],
         favoriteMoods: preferences.favoriteMoods || current?.favoriteMoods || [],
-        ratings: await ratingsApi.getAll(),
+        ratings: userRatings,
       };
 
       localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(updated));
