@@ -64,9 +64,17 @@ const FeedbackButton = () => {
       setTimeout(() => {
         handleClose();
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error submitting feedback:', err);
-      setError('Failed to submit feedback. Please try again.');
+
+      // Check for specific RLS policy error
+      if (err.message?.includes('Database permissions not configured')) {
+        setError('Database configuration needed. Check console for instructions or contact administrator.');
+      } else if (err.message?.includes('row-level security') || err.code === '42501') {
+        setError('Permission error. Please ensure the database is properly configured.');
+      } else {
+        setError('Failed to submit feedback. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

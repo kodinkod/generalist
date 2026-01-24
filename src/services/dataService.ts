@@ -309,7 +309,24 @@ export const feedbackApi = {
         .select()
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // Detect RLS policy violation error
+        if (error.code === '42501' || error.message?.includes('row-level security policy')) {
+          console.error('❌ Feedback RLS Policy Error');
+          console.error('📝 Your Supabase database needs to be updated with the latest RLS policies.');
+          console.error('');
+          console.error('🔧 To fix this:');
+          console.error('  1. Open your Supabase project dashboard');
+          console.error('  2. Go to SQL Editor');
+          console.error('  3. Run the SQL script from: fix-feedback-rls.sql');
+          console.error('  4. Alternatively, run the full schema: supabase-schema.sql');
+          console.error('');
+          console.error('💡 This error occurs when the database permissions are not in sync with the code.');
+
+          throw new Error('Database permissions not configured. Please run fix-feedback-rls.sql in your Supabase SQL Editor. See console for details.');
+        }
+        throw error;
+      }
       if (!data) throw new Error('Failed to insert feedback');
 
       return {

@@ -184,6 +184,39 @@ Edit or add movies in `src/data/sampleMovies.ts`
 
 Customize weights and parameters in `src/services/recommendationEngine.ts`
 
+## Troubleshooting
+
+### Feedback Submission Error (RLS Policy Violation)
+
+If you see this error when submitting feedback:
+```
+Error 42501: new row violates row-level security policy for table "feedback"
+```
+
+**Solution:**
+1. Open your Supabase project dashboard
+2. Go to SQL Editor
+3. Run the SQL script from `fix-feedback-rls.sql`
+4. Refresh your application
+
+This error occurs when the database schema is out of sync with the code. The fix script updates the Row-Level Security policies to allow feedback submission.
+
+### Database Connection Issues
+
+If you're experiencing database errors:
+
+1. **Check environment variables**: Make sure `.env` has correct Supabase URL and anon key
+2. **Verify schema is loaded**: Run `supabase-schema.sql` in your Supabase SQL Editor
+3. **Test connection**: Open browser console and run `testDatabaseConnection()`
+4. **Check RLS policies**: Ensure all policies from the schema file are applied
+
+### LocalStorage Fallback
+
+If Supabase has repeated errors, the app automatically falls back to LocalStorage mode:
+- Data is stored locally in your browser
+- Use `enableSupabase()` in browser console to re-enable Supabase
+- Use `disableSupabase()` to manually switch to LocalStorage mode
+
 ## Building for Production
 
 ```bash
