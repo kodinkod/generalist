@@ -297,7 +297,9 @@ export const feedbackApi = {
     const userId = getUserId();
 
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase
+      // Note: We don't use .select() after insert because the anon role
+      // doesn't have SELECT permission on the feedback table (by design for privacy)
+      const { error } = await supabase
         .from('feedback')
         .insert([{
           user_id: userId,
@@ -305,9 +307,7 @@ export const feedbackApi = {
           system_id: feedback.systemId,
           type: feedback.type,
           message: feedback.message,
-        }])
-        .select()
-        .maybeSingle();
+        }]);
 
       if (error) {
         // Detect RLS policy violation error
@@ -327,16 +327,16 @@ export const feedbackApi = {
         }
         throw error;
       }
-      if (!data) throw new Error('Failed to insert feedback');
 
+      // Return a constructed feedback object since we can't select after insert
       return {
-        id: data.id,
-        userId: data.user_id,
-        itemId: data.item_id,
-        systemId: data.system_id,
-        type: data.type,
-        message: data.message,
-        createdAt: new Date(data.created_at),
+        id: `feedback_${Date.now()}`,
+        userId,
+        itemId: feedback.itemId,
+        systemId: feedback.systemId,
+        type: feedback.type,
+        message: feedback.message,
+        createdAt: new Date(),
       };
     } else {
       const feedbacks = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
