@@ -26,6 +26,9 @@ interface FilterPanelProps {
 
 const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) => {
   const isFirstRender = useRef(true);
+  const isYearRangeUserModified = useRef(false);
+  const prevMinYear = useRef<number | null>(null);
+  const prevMaxYear = useRef<number | null>(null);
 
   // Calculate min/max year from movies
   const { minYear, maxYear } = useMemo(() => {
@@ -46,12 +49,26 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
   const allGenres = recommendationEngine.getAllGenres(movies);
   const allMoods = recommendationEngine.getAllMoods(movies);
 
-  // Initialize year range when movies change
+  // Initialize year range when movies change (but don't trigger filter change)
   useEffect(() => {
-    setYearRange([minYear, maxYear]);
+    // Only auto-update if user hasn't manually modified the year range
+    if (!isYearRangeUserModified.current) {
+      setYearRange([minYear, maxYear]);
+    }
+    // Track previous values to detect data initialization vs user changes
+    prevMinYear.current = minYear;
+    prevMaxYear.current = maxYear;
   }, [minYear, maxYear]);
 
+  // Check if user has explicitly changed year range from defaults
+  const handleYearRangeChange = (_: Event, value: number | number[]) => {
+    const newValue = value as number[];
+    isYearRangeUserModified.current = true;
+    setYearRange(newValue);
+  };
+
   // Memoize filter object to avoid unnecessary re-renders
+  // Only include yearRange if user has explicitly modified it
   const currentFilter = useMemo(() => {
     const filter: RecommendationFilter = {};
 
@@ -67,7 +84,8 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
       filter.minRating = minRating;
     }
 
-    if (yearRange[0] !== minYear || yearRange[1] !== maxYear) {
+    // Only include year range if user has explicitly modified it
+    if (isYearRangeUserModified.current && (yearRange[0] !== minYear || yearRange[1] !== maxYear)) {
       filter.yearRange = {
         min: yearRange[0],
         max: yearRange[1],
@@ -77,13 +95,23 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
     return filter;
   }, [selectedGenres, selectedMoods, minRating, yearRange, minYear, maxYear]);
 
-  // Only trigger filter change when filter actually changes (skip first render)
+  // Only trigger filter change when user explicitly changes filters (skip initial data loading)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    onFilterChange(currentFilter);
+
+    // Only call onFilterChange if there's an actual user-initiated filter change
+    // (not just data initialization)
+    const hasActiveFilter = selectedGenres.length > 0 ||
+                           selectedMoods.length > 0 ||
+                           minRating > 0 ||
+                           isYearRangeUserModified.current;
+
+    if (hasActiveFilter || Object.keys(currentFilter).length > 0) {
+      onFilterChange(currentFilter);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFilter]);
 
@@ -102,14 +130,14 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
     setSelectedMoods([]);
     setMinRating(0);
     setYearRange([minYear, maxYear]);
+    isYearRangeUserModified.current = false;
   };
 
   const hasActiveFilters =
     selectedGenres.length > 0 ||
     selectedMoods.length > 0 ||
     minRating > 0 ||
-    yearRange[0] !== minYear ||
-    yearRange[1] !== maxYear;
+    (isYearRangeUserModified.current && (yearRange[0] !== minYear || yearRange[1] !== maxYear));
 
   return (
     <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
@@ -208,7 +236,7 @@ const FilterPanel = ({ movies, onFilterChange, systemType }: FilterPanelProps) =
         </Typography>
         <Slider
           value={yearRange}
-          onChange={(_, value) => setYearRange(value as number[])}
+          onChange={handleYearRangeChange}
           min={minYear}
           max={maxYear}
           valueLabelDisplay="auto"
